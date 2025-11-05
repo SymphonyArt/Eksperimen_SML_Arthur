@@ -42,7 +42,7 @@ jobs:
       - name: Run preprocessing script
         run: |
           cd preprocessing
-          python automate_Arthur.py
+          python automate_arthur.py
 
       # Langkah 5: Simpan 4 file CSV yang dihasilkan sebagai artifact
       - name: Upload preprocessed data
