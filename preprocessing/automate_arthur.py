@@ -1,6 +1,7 @@
 
 import pandas as pd
 import numpy as np
+from pathlib import Path  
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, LabelEncoder
 from imblearn.over_sampling import SMOTE
@@ -12,11 +13,7 @@ warnings.filterwarnings('ignore', category=UserWarning)
 def preprocess_pipeline(file_path):
     """
     Melakukan pipeline preprocessing lengkap dan menyimpan hasilnya
-    ke 4 file CSV:
-    1. X_train_res.csv
-    2. y_train_res.csv
-    3. X_test.csv
-    4. y_test.csv
+    ke 4 file CSV di folder yang sama dengan skrip ini.
     """
     
     # ---------------------------------
@@ -32,20 +29,15 @@ def preprocess_pipeline(file_path):
     # ---------------------------------
     # 2. Cleaning Data
     # ---------------------------------
-    
-    # Hapus 'Unnamed: 0'
     if 'Unnamed: 0' in df.columns:
         df = df.drop(columns='Unnamed: 0')
 
-    # Standarisasi 'Gender' (f -> F)
     if 'Gender' in df.columns:
         df['Gender'].replace('f', 'F', inplace=True)
     
     # ---------------------------------
     # 3. Handle Outlier (IQR)
     # ---------------------------------
-    
-    # Menggunakan kolom numerik (termasuk target) sesuai alur notebook
     num_cols = df.select_dtypes(include=['float64', 'int64']).columns.tolist()
     
     if num_cols:
@@ -56,7 +48,6 @@ def preprocess_pipeline(file_path):
         batas_bawah = Q1 - (1.5 * IQR)
         batas_atas = Q3 + (1.5 * IQR)
         
-        # Buat mask untuk baris non-outlier
         mask = ~((df[num_cols] < batas_bawah) | (df[num_cols] > batas_atas)).any(axis=1)
         
         df_sebelum = df.shape[0]
@@ -79,19 +70,13 @@ def preprocess_pipeline(file_path):
         
     X = df.drop(columns=['Diagnosis'])
     y = df['Diagnosis']
-    
-    # Simpan nama kolom
     feature_names = X.columns
     
     # ---------------------------------
     # 6. Standarisasi Fitur (X)
     # ---------------------------------
-    
-    # Scaling dilakukan pada X keseluruhan (sesuai alur notebook)
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(X)
-    
-    # Ubah X_scaled ke DataFrame (jaga kolom)
     X = pd.DataFrame(X_scaled, columns=feature_names)
     
     # ---------------------------------
@@ -113,18 +98,20 @@ def preprocess_pipeline(file_path):
     # 9. Simpan Hasil ke File CSV
     # ---------------------------------
     
-    # Beri nama pada Series target agar CSV memiliki header
+    # Dapatkan path absolut dari folder tempat skrip ini berada
+    SCRIPT_DIR = Path(__file__).parent
+    
     y_train_res.name = 'Diagnosis'
     y_test.name = 'Diagnosis'
     
-    # Simpan 4 file
-    X_train_res.to_csv('X_train_res.csv', index=False)
-    y_train_res.to_csv('y_train_res.csv', index=False)
-    X_test.to_csv('X_test.csv', index=False)
-    y_test.to_csv('y_test.csv', index=False)
+    # Simpan 4 file di folder yang sama dengan skrip (preprocessing/)
+    X_train_res.to_csv(SCRIPT_DIR / 'X_train_res.csv', index=False)
+    y_train_res.to_csv(SCRIPT_DIR / 'y_train_res.csv', index=False)
+    X_test.to_csv(SCRIPT_DIR / 'X_test.csv', index=False)
+    y_test.to_csv(SCRIPT_DIR / 'y_test.csv', index=False)
     
     print("\n--- Pipeline Selesai ---")
-    print("4 file telah disimpan:")
+    print("4 file telah disimpan di folder 'preprocessing':")
     print("1. X_train_res.csv")
     print("2. y_train_res.csv")
     print("3. X_test.csv")
@@ -135,8 +122,14 @@ def preprocess_pipeline(file_path):
 # --- CONTOH PENGGUNAAN ---
 if __name__ == "__main__":
     
-    # --- SESUAIKAN PATH INI ---
-    PATH_DATA = r"..\Diabetes Classification.csv" 
+    # Dapatkan path absolut dari folder tempat skrip ini berada (preprocessing/)
+    SCRIPT_DIR = Path(__file__).parent
+    
+    # Dapatkan path folder root (satu level di atas folder skrip)
+    ROOT_DIR = SCRIPT_DIR.parent
+    
+    # Tentukan path data input yang ada di folder root
+    PATH_DATA = ROOT_DIR / "Diabetes Classification.csv" 
     
     print(f"Memulai pipeline preprocessing untuk file: {PATH_DATA} \n")
     
